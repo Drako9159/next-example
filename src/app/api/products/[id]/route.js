@@ -1,4 +1,4 @@
-import { conn } from "@/app/libs/mysql";
+import { conn } from "@/libs/mysql";
 import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {

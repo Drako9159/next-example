@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { useParams, useRouter } from "next/navigation";
 
 export default function ProductForm() {
   const [product, setProduct] = useState({
@@ -8,6 +9,22 @@ export default function ProductForm() {
     price: 0,
     description: "",
   });
+
+  const router = useRouter();
+  const form = useRef(null);
+  const params = useParams();
+
+  useEffect(() => {
+    if (params.id) {
+      axios.get(`/api/products/${params.id}`).then((res) => {
+        setProduct({
+          name: res.data.name,
+          price: res.data.price,
+          description: res.data.description,
+        });
+      });
+    }
+  }, []);
 
   function handleChange(e) {
     setProduct({
@@ -18,14 +35,26 @@ export default function ProductForm() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const response = await axios.post("/api/products", product)
-    console.log(response)
+
+    if (!params.id) {
+      const response = await axios.post("/api/products", product);
+      console.log(response);
+    } else {
+      const response = await axios.put(`/api/products/${params.id}`, product);
+      console.log(response);
+    }
+
+    form.current.reset();
+    router.refresh();
+    router.push("/products");
+    router.refresh();
   }
 
   return (
     <form
       className="bg-white shadow-md rounded-md px-8 pt-6 pb-8 mb-4"
       onSubmit={handleSubmit}
+      ref={form}
     >
       <label
         htmlFor="name"
@@ -38,6 +67,7 @@ export default function ProductForm() {
         placeholder="name"
         name="name"
         onChange={handleChange}
+        autoFocus
         value={product.name}
         className="shadow appearance-none text-gray-700 border rounded w-full py-2 px-3"
       />
@@ -50,7 +80,7 @@ export default function ProductForm() {
       </label>
       <input
         type="text"
-        placeholder="price"
+        placeholder="00.00"
         name="price"
         onChange={handleChange}
         value={product.price}
@@ -71,8 +101,11 @@ export default function ProductForm() {
         value={product.description}
         className="shadow appearance-none text-gray-700 border rounded w-full py-2 px-3 "
       />
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Save product
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        {params.id ? "Update Product" : "Create Product"}
       </button>
     </form>
   );
